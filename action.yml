@@ -4,58 +4,59 @@ description: 'Process coverage data'
 runs:
   using: "composite"
   steps:
-      - name: "Build io and profiling packages if necessary"
-        shell: bash
-        run: |
-         # the following somewhat awkward `cd` invocation ensures
-         # compatibility with both GAP <= 4.11 (with package dir names like
-         # `pkg/io-1.2.3`) and GAP >= 4.12 (where it is `pkg/io`)
-         cd $GAPROOT/pkg/io || cd $GAPROOT/pkg/io-*
-         if [[ ! -f config.status ]] ; then
-           ./configure --with-gaproot=$GAPROOT
-         fi
-         make -j$(nproc)
+    - name: "Build io and profiling packages if necessary"
+      shell: bash
+      run: |
+        # the following somewhat awkward `cd` invocation ensures
+        # compatibility with both GAP <= 4.11 (with package dir names like
+        # `pkg/io-1.2.3`) and GAP >= 4.12 (where it is `pkg/io`)
+        cd $GAPROOT/pkg/io || cd $GAPROOT/pkg/io-*
+        if [[ ! -f config.status ]] ; then
+          ./configure --with-gaproot=$GAPROOT
+        fi
+        make -j$(nproc)
 
-         cd $GAPROOT/pkg/profiling || cd $GAPROOT/pkg/profiling-*
-         if [[ ! -f Makefile ]] ; then
-           if [[ -f configure.ac ]] ; then
-             ./configure --with-gaproot=$GAPROOT
-           else
-             ./configure $GAPROOT
-           fi
-         fi
-         make -j$(nproc)
+        cd $GAPROOT/pkg/profiling || cd $GAPROOT/pkg/profiling-*
+        if [[ ! -f Makefile ]] ; then
+          if [[ -f configure.ac ]] ; then
+            ./configure --with-gaproot=$GAPROOT
+          else
+            ./configure $GAPROOT
+          fi
+        fi
+        make -j$(nproc)
+        Exec( "echo \"::warning::Test!!\"" );
 
-      - name: "Process coverage data"
-        shell: bash
-        run: |
-         # generate library coverage reports
-         $GAP -q <<GAPInput
-         if LoadPackage("profiling") <> true then
-             Print("ERROR: could not load profiling package");
-             FORCE_QUIT_GAP(1);
-         fi;
-         d := Directory("coverage");
-         covs := [];
-         files := DirectoryContents(d);
-         if files = fail then
-            Print("no coverage data found\n");
-            QUIT_GAP(0);
-         fi;
-         for f in files do
-             if f in [".", ".."] then continue; fi;
-             Add(covs, Filename(d, f));
-         od;
-         Print("Merging coverage results from ", covs, "\n");
-         r := MergeLineByLineProfiles(covs);;
-         # filtered out unwanted other packages to avoid bad coverage interaction
-         r.line_info := Filtered(r.line_info, x -> not StartsWith( x[1], "$GAPROOT/" ) );;
-         Print("Outputting JSON\n");
-         OutputJsonCoverage(r, "gap-coverage.json");
-         QUIT_GAP(0);
-         GAPInput
+    - name: "Process coverage data"
+      shell: bash
+      run: |
+        # generate library coverage reports
+        $GAP -q <<GAPInput
+        if LoadPackage("profiling") <> true then
+          Exec("echo \"::errorr::Could not load profiling package\"");
+          ForceQuitGap(1);
+        fi;
+        d := Directory("coverage");
+        covs := [];
+        files := DirectoryContents(d);
+        if files = fail then
+          Exec("echo \"::warning::No coverage data found\"");
+          QuitGap(0);
+        fi;
+        for f in files do
+          if f in [".", ".."] then continue; fi;
+          Add(covs, Filename(d, f));
+        od;
+        Print("Merging coverage results from ", covs, "\n");
+        r := MergeLineByLineProfiles(covs);;
+        # filtered out unwanted other packages to avoid bad coverage interaction
+        r.line_info := Filtered(r.line_info, x -> not StartsWith( x[1], "$GAPROOT/" ) );;
+        Print("Outputting JSON\n");
+        OutputJsonCoverage(r, "gap-coverage.json");
+        QuitGap(0);
+        GAPInput
 
-      - name: "generate source coverage reports by running gcov"
-        shell: bash
-        run: |
-         find . -type f -name '*.gcno' -exec gcov -pb {} +
+    - name: "generate source coverage reports by running gcov"
+      shell: bash
+      run: |
+       find . -type f -name '*.gcno' -exec gcov -pb {} +
