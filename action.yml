@@ -34,7 +34,7 @@ runs:
         Exec( "echo \"::warning::Test!!\"" );
         if LoadPackage("profiling") <> true then
           Exec("echo \"::errorr::Could not load profiling package\"");
-          ForceQuitGap(1);
+          FORCE_QUIT_GAP(1);
         fi;
         Exec( "echo \"::error::Test 2!!\"" );
         d := Directory("coverage");
@@ -42,7 +42,7 @@ runs:
         files := DirectoryContents(d);
         if files = fail then
           Exec("echo \"::warning::No coverage data found\"");
-          QuitGap(0);
+          QUIT_GAP(0);
         fi;
         for f in files do
           if f in [".", ".."] then continue; fi;
@@ -54,7 +54,7 @@ runs:
         r.line_info := Filtered(r.line_info, x -> not StartsWith( x[1], "$GAPROOT/" ) );;
         Print("Outputting JSON\n");
         OutputJsonCoverage(r, "gap-coverage.json");
-        QuitGap(0);
+        QUIT_GAP(0);
         GAPInput
 
     - name: "generate source coverage reports by running gcov"
