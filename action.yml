@@ -25,17 +25,18 @@ runs:
           fi
         fi
         make -j$(nproc)
-        Exec( "echo \"::warning::Test!!\"" );
 
     - name: "Process coverage data"
       shell: bash
       run: |
         # generate library coverage reports
         $GAP -q <<GAPInput
+        Exec( "echo \"::warning::Test!!\"" );
         if LoadPackage("profiling") <> true then
           Exec("echo \"::errorr::Could not load profiling package\"");
           ForceQuitGap(1);
         fi;
+        Exec( "echo \"::error::Test 2!!\"" );
         d := Directory("coverage");
         covs := [];
         files := DirectoryContents(d);
