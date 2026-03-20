@@ -22,7 +22,6 @@ jobs:
           - '4.12'
           - '4.11'
           - '4.10'
-          - '4.9'
 
     steps:
       # the order of the checkout actions is important because all contents of
