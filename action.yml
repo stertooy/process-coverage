@@ -7,6 +7,13 @@ runs:
     - name: "Build io and profiling packages if necessary"
       shell: bash
       run: |
+        # macOS compatibility for nproc
+        if [[ "${{ runner.os }}" = "macOS" ]] ; then
+          NPROC=$(sysctl -n hw.ncpu)
+        else
+          NPROC=$(nproc)
+        fi
+        
         # the following somewhat awkward `cd` invocation ensures
         # compatibility with both GAP <= 4.11 (with package dir names like
         # `pkg/io-1.2.3`) and GAP >= 4.12 (where it is `pkg/io`)
@@ -14,7 +21,7 @@ runs:
         if [[ ! -f config.status ]] ; then
           ./configure --with-gaproot=$GAPROOT
         fi
-        make -j$(nproc)
+        make -j${NPROC}
 
         cd $GAPROOT/pkg/profiling || cd $GAPROOT/pkg/profiling-*
         if [[ ! -f Makefile ]] ; then
@@ -24,7 +31,7 @@ runs:
             ./configure $GAPROOT
           fi
         fi
-        make -j$(nproc)
+        make -j${NPROC}
 
     - name: "Process coverage data"
       shell: bash
