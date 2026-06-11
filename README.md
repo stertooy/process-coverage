@@ -42,15 +42,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: gap-actions/setup-gap@v3
-      - uses: gap-actions/build-pkg@v2
+      - uses: gap-actions/build-pkg@v3
       - uses: gap-actions/run-pkg-tests@v4
       - uses: gap-actions/process-coverage@v3
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
 ```
 
 The recommended configuration for `codecov/codecov-action` is as follows:
 ```yaml
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
